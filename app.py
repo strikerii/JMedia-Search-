@@ -1,8 +1,14 @@
 from flask import Flask, request, jsonify
 import requests
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from a .env file
+load_dotenv()
 
 app = Flask(__name__)
 
+# Function to fetch news by topic
 def get_news_by_topic(params):
     url = "https://newsapi.org/v2/everything"
     headers = {
@@ -21,14 +27,23 @@ def get_news_by_topic(params):
             "details": response.text,
         }
 
-@app.route("/news", methods=["POST","GET"])
+@app.route("/news", methods=["POST", "GET"])
 def fetch_news():
     # Parse request data
     data = request.get_json()
-    data['apiKey']="52414c7d904b41c4b05e263e2f243d08"       
     
-    # Validate inputs
-    if not data:
+    # Get the API key from the environment variable
+    api_key = os.getenv("NEWS_API_KEY")
+
+    # Validate if API key exists
+    if not api_key:
+        return jsonify({"error": "API key is missing from environment variables."}), 400
+    
+    # Add the API key to the params
+    data['apiKey'] = api_key
+
+    # Validate if the topic is provided
+    if not data.get("q"):
         return jsonify({"error": "Topic is required"}), 400
 
     # Fetch news using the params
@@ -40,6 +55,4 @@ def fetch_news():
         return jsonify(result), 500
 
 if __name__ == "__main__":
-
     app.run(debug=True)
-
