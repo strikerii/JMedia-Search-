@@ -1,14 +1,15 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import requests
-import os
 from dotenv import load_dotenv
+import os
 
-# Load environment variables from a .env file
+# Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
-# Function to fetch news by topic
 def get_news_by_topic(params):
     url = "https://newsapi.org/v2/everything"
     headers = {
@@ -31,19 +32,16 @@ def get_news_by_topic(params):
 def fetch_news():
     # Parse request data
     data = request.get_json()
-    
-    # Get the API key from the environment variable
-    api_key = os.getenv("NEWS_API_KEY")
 
-    # Validate if API key exists
+    # Add API key from .env
+    api_key = os.getenv("NEWS_API_KEY")
     if not api_key:
-        return jsonify({"error": "API key is missing from environment variables."}), 400
+        return jsonify({"error": "API key is missing or not configured."}), 500
     
-    # Add the API key to the params
     data['apiKey'] = api_key
 
-    # Validate if the topic is provided
-    if not data.get("q"):
+    # Validate inputs
+    if not data:
         return jsonify({"error": "Topic is required"}), 400
 
     # Fetch news using the params
